@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+	<head>
+	    <meta charset="utf-8">
+	    <title>Карта Парка ДГТУ</title>
+	    <link rel="stylesheet" href="src/leaflet.css"/>
+	    <link rel="stylesheet" href="src/Leaflet.MousePosition-master/src/L.Control.MousePosition.css"/>
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.3.2/leaflet.draw.css"/>
+	    <link rel="stylesheet" href="src/leaflet-measure-path-master/leaflet-measure-path.css"/>
+	    <link rel="stylesheet" href="src/Leaflet.MeasureControl-master/leaflet.measurecontrol.css"/>
+	    <link rel="stylesheet" href="src/bootstrap-4.4.1/dist/css/bootstrap.css">
+	    <link rel="stylesheet" href="src/custom.css"/>
+	    
+
+	</head>
+	<body>
+    	<div id="mapid"></div>
+   		<div class="card-container"></div>
+
+	    <script src="src/leaflet.js"></script>
+	    <script src="src/Leaflet.MousePosition-master/src/L.Control.MousePosition.js"></script>
+	    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.3.2/leaflet.draw.js"></script>
+	    <script src="src/leaflet-measure-path-master/leaflet-measure-path.js"></script>
+	    <script src="src/Leaflet.draw-develop/src/Leaflet.Draw.Event.js"></script>
+	    <script src="src/Leaflet.draw-develop/src/Control.Draw.js"></script>
+	    <script src="src/Leaflet.MeasureControl-master/leaflet.measurecontrol.js"></script>
+	    
+	    <script src="src/backbone.marionette/jquery.js"></script>
+	    <script src="src/backbone.marionette/underscore.js"></script>
+	    <script src="src/backbone.marionette/json2.js"></script>
+
+	    <script src="src/backbone.marionette/backbone.radio.js"></script>
+	    <script src="src/backbone.marionette/backbone.js"></script>
+	    <script src="src/backbone.marionette/backbone.marionette.js"></script>
+	    
+	   
+	    <script>
+		    var mymap = L.map('mapid');
+		   	
+		   	var lineContr = new L.Control.measureControl();
+		    mymap.addControl(lineContr);
+		    
+		    mymap.setView([47.2401, 39.71065], 16.5);
+		    
+		    L.control.mousePosition().addTo(mymap);
+		   
+		    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+		    			maxZoom: 18,
+		      			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' + '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' + 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+		      			id: 'mapbox/streets-v11'
+		    }).addTo(mymap);
+
+		    var editableLayers = new L.FeatureGroup();
+		    
+		    mymap.addLayer(editableLayers);
+
+		    var options = {
+		      position: 'topleft',
+
+		      draw: {
+		          polyline: true,	//Дублирует функцию линейки из mesureControl, но в связке с измерением площади работает более корректно
+		          polygon: {
+		              metric:true
+		            },
+		          circle: false, 
+		          rectangle:false,
+		          marker:false      
+		        }
+		    };
+		    
+		    var drawControl = new L.Control.Draw(options);
+		    mymap.addControl(drawControl);	//Необходимо для измерения площади, так как средствами mesureControl реализовать замер площади не удалось
+		   
+		    
+		    mymap.on(L.Draw.Event.CREATED, function (e) {
+		        var type = e.layerType;
+		        var layer = e.layer;
+		    	
+		    	if(type === 'polygon'){
+		    		cords = layer.getLatLngs();
+		        	polygon = L.polygon(cords, { showMeasurements: true }).addTo(mymap);
+		          	polygon = layer.getLatLngs();
+		          	editableLayers.addLayer(polygon);
+		        } else{
+		        		cords = layer.getLatLngs();
+		        		polyline = L.polyline(cords, { showMeasurements: true }).addTo(mymap);
+		          		editableLayers.addLayer(polyline);
+		    		}
+		    });
+		     
+
+		    var dstuIcon = L.icon({
+		          iconUrl: 'img/DSTU.png',
+		          iconSize:     [75, 75],
+		          popupAnchor:  [0, -45]
+		        });
+
+		    var churchIcon = L.icon({
+		          iconUrl: 'img/church.jpg',
+		          iconSize:     [45, 45],
+		          iconAnchor:   [0, 25], 
+		          popupAnchor:  [25, -25]
+		        }); 
+
+		    var sportIcon = L.icon({
+		          iconUrl: 'img/olymp.png',
+		          iconSize:     [65, 45],
+		          iconAnchor:   [25, 30],
+		          popupAnchor:  [7, -25] 
+		        });
+
+		    var skateIcon = L.icon({
+		          iconUrl: 'img/skate.jpg',
+		          iconSize:     [35, 25],
+		          iconAnchor:   [10, 15],
+		          popupAnchor:  [5, -15] 
+		        });
+
+		    var bedIcon = L.icon({
+		          iconUrl: 'img/bed.jpg',
+		          iconSize:     [45, 25],
+		          iconAnchor:   [20, 25],
+		          popupAnchor:  [0, -25] 
+		        });
+
+		    var footballIcon = L.icon({
+		          iconUrl: 'img/ball.png',
+		          iconSize:     [45, 45],
+		          iconAnchor:   [25, 25],
+		          popupAnchor:  [0, -25] 
+		        });
+		    
+		    var centralMarker = L.marker([47.2401, 39.71065], {icon: dstuIcon}).addTo(mymap).bindPopup("Студенческий парк-Дгту").openPopup();
+		    var churchMarker = L.marker([47.239297, 39.711102], {icon: churchIcon}).addTo(mymap).bindPopup("Храм Великомученицы Татьяны");
+		    var sportMarker = L.marker([47.240936, 39.7093], {icon: sportIcon}).addTo(mymap).bindPopup("Легко-атлетический манеж");
+		    var skateMarker = L.marker([47.239924, 39.709128], {icon: skateIcon}).addTo(mymap).bindPopup("Скейт-площадка");
+		    var bedMarker = L.marker([47.239348, 39.712744], {icon: bedIcon}).addTo(mymap).bindPopup("Общежитие № 1");
+		    var footballMarker = L.marker([47.239276, 39.709182], {icon: footballIcon}).addTo(mymap).bindPopup("Футбольное поле");
+		    var popup = L.popup();
+
+	    </script>
+	    <script src="app.js"></script>
+	        
+  </body>
+</html>
